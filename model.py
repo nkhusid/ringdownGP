@@ -19,3 +19,21 @@ def model(times, data, data_err, omega_bounds, gamma_bounds, T_bounds):
     h_cov = cov_func(times, x, T, omega, gamma)
 
     numpyro.sample('data', dist.MultivariateNormal(h_mu, h_cov + jnp.diag(data_err**2)), obs=data)
+
+
+def cov_func_test(times, x, T, omega, gamma):
+    t1 = times[:, None]
+    t2 = times[None, :]
+
+    tmin = jnp.minimum(t1, t2)
+    tmin = jnp.minimum(tmin, T)
+
+    gamma2 = jnp.square(gamma)
+    omega2 = jnp.square(omega)
+
+    factor = jnp.square(x) / (4 * gamma * omega2 * (gamma2 + omega2))
+
+    term1 = jnp.exp(-gamma * (t1 + t2)) * (gamma * (gamma * jnp.cos(omega * (t1 + t2)) - omega * jnp.sin(omega * (t1 + t2))))
+    term2 = jnp.exp(-gamma * (t1 + t2 - 2 * tmin)) * ((gamma2 + omega2) * jnp.cos(omega * (t1 - t2)) + gamma * (omega * jnp.sin(omega * (t1 + t2 - 2*tmin)) - gamma * jnp.cos(omega * (t1 + t2 - 2*tmin))))
+
+    return factor * (term1 + term2)
