@@ -27,6 +27,8 @@ def model(times, data, data_err, omega_bounds, gamma_bounds, T_bounds):
     B = numpyro.sample('B', dist.Normal(0,1))
 
     x = numpyro.sample('x', dist.Exponential(1))
+    # log_x = numpyro.sample('log_x', dist.Uniform(-2, 1))
+    # x = numpyro.deterministic('x', jnp.power(10, log_x))
     T = numpyro.sample('T', dist.Uniform(*T_bounds))
 
     omega = numpyro.sample('omega', dist.Uniform(*omega_bounds))
