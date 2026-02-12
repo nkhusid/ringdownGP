@@ -4,25 +4,23 @@ import numpyro.distributions as dist
 
 def cov_func(times, x, T, omega, gamma):
 
-    cov_mat = jnp.zeroes((len(times), len(times)))
-    for i in range(len(times)):
-        for j in range(len(times)):
-            t, tprime = times[i], times[j]
-            upper = min([t, tprime, T])
-            fac = jnp.exp(-gamma*(t+tprime)) / jnp.square(omega) * jnp.square(x)
-            
-            term1 = -jnp.cos(omega*(t-tprime)) / (4*(jnp.square(gamma) + jnp.square(omega))) * (jnp.exp(-2*gamma*upper) - 1)
+    t = times[:, None]
+    tprime = times[None, :]
+    upper = jnp.minimum(t, tprime)
+    upper = jnp.minimum(upper, T)
+    fac = jnp.exp(-gamma*(t+tprime)) / jnp.square(omega) * jnp.square(x)
+    
+    term1 = jnp.cos(omega*(t-tprime)) / (4*gamma) * (jnp.exp(2*gamma*upper) - 1)
 
-            def eval2(s):
-                return jnp.exp(-2*gamma*s) * (gamma*jnp.cos(2*omega*s) - omega*jnp.sin(2*omega*s))
-            term2 = -jnp.cos(omega*(t+tprime)) / (4*(jnp.square(gamma) + jnp.square(omega))) * (eval2(-2*gamma*upper) - eval2(0))
+    def eval2(s):
+        return jnp.exp(2*gamma*s) * (gamma*jnp.cos(2*omega*s) + omega*jnp.sin(2*omega*s))
+    term2 = -jnp.cos(omega*(t+tprime)) / (4*(jnp.square(gamma) + jnp.square(omega))) * (eval2(upper) - eval2(0))
 
-            def eval3(s):
-                return jnp.exp(-2*gamma*s) * (gamma*jnp.sin(2*omega*s) + omega*jnp.cos(2*omega*s))
-            term3 = jnp.sin(omega*(t+tprime)) / (4*(jnp.square(gamma) + jnp.square(omega))) * (eval3(-2*gamma*upper) - eval3(0))
+    def eval3(s):
+        return jnp.exp(2*gamma*s) * (gamma*jnp.sin(2*omega*s) - omega*jnp.cos(2*omega*s))
+    term3 = -jnp.sin(omega*(t+tprime)) / (4*(jnp.square(gamma) + jnp.square(omega))) * (eval3(upper) - eval3(0))
 
-            cov_element = fac * (term1 + term2 + term3)
-            cov_mat[i, j] = cov_element
+    return fac * (term1 + term2 + term3)
 
 def model(times, data, data_err, omega_bounds, gamma_bounds, T_bounds):
     A = numpyro.sample('A', dist.Normal(0,1))
