@@ -52,7 +52,7 @@ def cov_func_test(times, x, T, omega, gamma):
 
     factor = jnp.square(x) / (4 * gamma * omega2 * (gamma2 + omega2))
 
-    term1 = jnp.exp(-gamma * (t1 + t2)) * (gamma * (gamma * jnp.cos(omega * (t1 + t2)) - omega * jnp.sin(omega * (t1 + t2))))
+    term1 = jnp.exp(-gamma * (t1 + t2)) * (gamma * (gamma * jnp.cos(omega * (t1 + t2)) - omega * jnp.sin(omega * (t1 + t2))) - (gamma2 + omega2) * jnp.cos(omega * (t1 - t2)))
     term2 = jnp.exp(-gamma * (t1 + t2 - 2 * tmin)) * ((gamma2 + omega2) * jnp.cos(omega * (t1 - t2)) + gamma * (omega * jnp.sin(omega * (t1 + t2 - 2*tmin)) - gamma * jnp.cos(omega * (t1 + t2 - 2*tmin))))
 
     return factor * (term1 + term2)
